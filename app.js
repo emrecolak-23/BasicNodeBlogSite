@@ -1,13 +1,60 @@
 const express = require('express');
 const morgan = require('morgan');
+const mongoose = require('mongoose');
+const Blog = require("./models/blog");
 
 // Create express app
 const app = express();
+
+// connect to mongo db
+const dbURI = "mongodb+srv://emco:emco3232@nodetuts.iuulr.mongodb.net/nodetuts?retryWrites=true&w=majority"
+
+mongoose.connect(dbURI, {useNewUrlParser:true,useUnifiedTopology:true})
+.then((result)=>{ 
+  // declare port number
+  const PORT = 10000;
+  // listen for request
+  app.listen(PORT);} )
+.catch((err)=>{ console.log(err); })
 
 // register ejs
 app.set("view engine","ejs");
 
 app.use(morgan('dev'));
+
+
+// mongoose and mongo sandbox routes
+// app.get("/add-blog", (req,resp)=>{
+//   const blog = new Blog({
+//     title: "New Blog 2",
+//     snippet: "About my new blog",
+//     body: "More about my new blog"
+//   });
+//   blog.save()
+//     .then((result)=>{
+//       resp.send(result);
+//     }).catch((err)=>{
+//       console.log(err);
+//     })
+// })
+
+// app.get("/all-blogs", (req,resp)=>{
+//   Blog.find()
+//     .then((result)=>{
+//       resp.send(result);
+//     }).catch((err)=>{
+//       console.log(err);
+//     })
+// })
+
+// app.get("/single-blog", (req,resp)=>{
+//   Blog.findById('620830becdda24249ef7ac51')
+//     .then((result)=>{
+//       resp.send(result);
+//     }).catch((err)=>{
+//       console.log(err);
+//     })
+// })
 
 // create own custom middleware
 // app.use((req,resp,next)=>{
@@ -18,23 +65,23 @@ app.use(morgan('dev'));
 //   next();
 // })
 
-// declare port number
-const PORT = 9000;
 
-// listen for request
-app.listen(PORT);
 
 // middleware & static files
 app.use(express.static('public'));
 
 app.get("/", (req,resp)=>{
-  const blogs = [
-    { title: "This is a first blog", snippet: "This blogs is fascinating and amazing" },
-    { title: "This is a second blog", snippet: "This blog is fascinating and amazing" },
-    { title: "This is a third blog", snippet: "This blog is fascinating and amazing" }
-  ]
-  resp.render("index", { title: "Home", blogs});
+  resp.redirect("/blogs")
 });
+
+app.get("/blogs", (req,resp)=>{
+  Blog.find().sort({createdAt:-1})
+    .then((result)=>{
+      resp.render("index",{title: "All Blogs", blogs: result});
+    }).catch((err)=>{
+      console.log(err);
+    })
+})
 
 // app.use((req,resp,next)=>{
 //   console.log("in the next middleware");
